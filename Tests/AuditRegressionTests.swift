@@ -77,8 +77,10 @@ final class AuditRegressionTests: XCTestCase {
             XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
         }
     }
-    func testOversizedDeclaredResponseCancelsWithoutReadingBody() async throws {
-        try await checkBoundedResponse(headers: ["Content-Length": "1048576"], data: Data())
+    func testOversizedDeclaredResponseCancelsOnInitialChunk() async throws {
+        // Foundation may wait for the first byte before returning AsyncBytes.
+        // A one-byte, unfinished body must still fail on the declared length.
+        try await checkBoundedResponse(headers: ["Content-Length": "1048576"], data: Data([65]))
     }
     func testOversizedChunkedResponseCancelsBeforeTransferCompletes() async throws {
         try await checkBoundedResponse(headers: [:], data: Data(repeating: 65, count: 1025))
@@ -97,6 +99,7 @@ final class AuditRegressionTests: XCTestCase {
         defer { timeout.cancel() }
         do { _ = try await read.value; XCTFail("Oversized response must fail") }
         catch WLocError.responseTooLarge { }
+        catch { XCTFail("Expected responseTooLarge, got \(error)") }
         await fulfillment(of: [stopped], timeout: 2)
     }
     private func location(name: String) -> ParsedLocation {
