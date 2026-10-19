@@ -1,8 +1,8 @@
 #!name=WLoc Native 本机定位
 #!desc=配合 WLoc iOS App，本机保存常用坐标，无需自建后台。安装后在模块参数 key 中填入 App 生成的配对密钥；停用其他 WLOC 响应改写模块以避免冲突。
 #!homepage=https://github.com/JavaWeh/wloc-ios
-#!arguments=key:
-#!arguments-desc=key：复制 App“Surge 配对”中生成的密钥，仅含英文字母和数字。首次未提交坐标时不改写定位；关闭虚拟定位后放行原响应。
+#!arguments=key:SET_KEY_IN_APP
+#!arguments-desc=key：请将 SET_KEY_IN_APP 替换为 App“Surge 配对”中生成的密钥，仅含英文字母和数字。未设置有效密钥时拒绝读写；首次未提交坐标时不改写定位；关闭后放行原响应。
 
 [Script]
 WLoc Native Control = type=http-request,pattern=^https:\/\/gs-loc\.apple\.com\/wloc-native\/v1\/(health|config|disable)$,requires-body=1,max-size=16384,timeout=10,script-path=https://raw.githubusercontent.com/JavaWeh/wloc-ios/main/Surge/wloc-control.js,argument=key={{{key}}}

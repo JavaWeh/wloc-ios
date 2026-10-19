@@ -3,6 +3,17 @@ const fs = require('node:fs');
 const vm = require('node:vm');
 const path = require('node:path');
 const root = path.resolve(__dirname, '..');
+const moduleText = fs.readFileSync(path.join(root, 'Surge/WLoc-Native.sgmodule'), 'utf8');
+const argumentLine = moduleText.match(/^#!arguments=(.*)$/m);
+assert(argumentLine, 'Module must declare pairing arguments');
+const defaults = Object.fromEntries(argumentLine[1].trim().split(',').map(item => {
+  const match = item.trim().match(/^([A-Za-z0-9_]+):(.+)$/);
+  assert(match && match[2].trim(), 'Module declarations must contain an explicit nonempty default');
+  return [match[1], match[2].trim()];
+}));
+for (const placeholder of moduleText.matchAll(/\{\{\{([A-Za-z0-9_]+)\}\}\}/g)) {
+  assert(placeholder[1] in defaults, 'Every module placeholder must be declared');
+}
 const control = fs.readFileSync(path.join(root, 'Surge/wloc-control.js'), 'utf8');
 const responseSource = fs.readFileSync(path.join(root, 'Surge/location-spoofer-local.js'), 'utf8');
 const api = require('../Surge/vendor/location-spoofer.upstream.js');
@@ -13,12 +24,12 @@ const persistent = {read: k => storage.get(k) || null, write: (data, k) => {
   if (!writes) return false;
   storage.set(k, data); return true;
 }};
-function request(route, method = 'GET', body, supplied = key) {
+function request(route, method = 'GET', body, supplied = key, configured = key) {
   let completed = 0, result;
   vm.runInNewContext(control, {
     $request: {url: 'https://gs-loc.apple.com/wloc-native/v1/' + route, method,
       body: body == null ? '' : JSON.stringify(body), headers: {'x-wloc-key': supplied}},
-    $argument: 'key=' + key, $persistentStore: persistent,
+    $argument: 'key=' + configured, $persistentStore: persistent,
     $done: value => {completed++; result = value.response;}
   });
   assert.equal(completed, 1, 'Each request must finish exactly once');
@@ -43,6 +54,7 @@ function rewrite() {
   return result;
 }
 assert.equal(request('health', 'GET', null, '').data.bridge, 'wloc-native-v2');
+assert.equal(request('config', 'GET', null, key, defaults.key).status, 503, 'Placeholder must not grant access');
 assert.equal(request('config', 'GET', null, 'wrong').status, 403);
 assert.equal(request('config').data.enabled, false);
 assert.equal(rewrite().body, undefined, 'No target must pass through');
