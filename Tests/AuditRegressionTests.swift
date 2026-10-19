@@ -77,19 +77,19 @@ final class AuditRegressionTests: XCTestCase {
             XCTAssertFalse(FileManager.default.fileExists(atPath: file.path))
         }
     }
-    func testOversizedDeclaredResponseCancelsOnInitialChunk() async throws {
-        // Foundation may wait for the first byte before returning AsyncBytes.
-        // A one-byte, unfinished body must still fail on the declared length.
-        try await checkBoundedResponse(headers: ["Content-Length": "1048576"], data: Data([65]))
+    func testOversizedDeclaredResponseIsRejectedEvenWithSmallBody() async throws {
+        // Foundation buffers a small declared-length body before yielding AsyncBytes.
+        // Finish this fixture to isolate header validation from streaming cancellation.
+        try await checkBoundedResponse(headers: ["Content-Length": "1048576"], data: Data([65]), finish: true)
     }
     func testOversizedChunkedResponseCancelsBeforeTransferCompletes() async throws {
         try await checkBoundedResponse(headers: [:], data: Data(repeating: 65, count: 1025))
     }
 
-    private func checkBoundedResponse(headers: [String: String], data: Data) async throws {
-        let stopped = expectation(description: "Oversized transfer cancelled")
-        AuditProtocol.spec = (headers, data)
-        AuditProtocol.onStop = { stopped.fulfill() }
+    private func checkBoundedResponse(headers: [String: String], data: Data, finish: Bool = false) async throws {
+        let stopped = finish ? nil : expectation(description: "Oversized transfer cancelled")
+        AuditProtocol.spec = (headers, data, finish)
+        AuditProtocol.onStop = { stopped?.fulfill() }
         let config = URLSessionConfiguration.ephemeral
         config.protocolClasses = [AuditProtocol.self]
         let session = URLSession(configuration: config)
@@ -100,7 +100,7 @@ final class AuditRegressionTests: XCTestCase {
         do { _ = try await read.value; XCTFail("Oversized response must fail") }
         catch WLocError.responseTooLarge { }
         catch { XCTFail("Expected responseTooLarge, got \(error)") }
-        await fulfillment(of: [stopped], timeout: 2)
+        if let stopped { await fulfillment(of: [stopped], timeout: 2) }
     }
     private func location(name: String) -> ParsedLocation {
         ParsedLocation(coordinate: Coordinate(latitude: 1, longitude: 2), name: name, system: .wgs84, source: "Test", warning: nil)
@@ -114,7 +114,7 @@ final class AuditRegressionTests: XCTestCase {
 }
 
 private final class AuditProtocol: URLProtocol {
-    static var spec: (headers: [String: String], data: Data) = ([:], Data())
+    static var spec: (headers: [String: String], data: Data, finish: Bool) = ([:], Data(), false)
     static var onStop: (() -> Void)?
     private var stop: (() -> Void)?
     override class func canInit(with request: URLRequest) -> Bool { true }
@@ -124,7 +124,8 @@ private final class AuditProtocol: URLProtocol {
         let response = HTTPURLResponse(url: request.url!, statusCode: 200, httpVersion: "HTTP/1.1", headerFields: Self.spec.headers)!
         client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
         if !Self.spec.data.isEmpty { client?.urlProtocol(self, didLoad: Self.spec.data) }
-        // Intentionally never finishes: the reader must cancel before the sender does.
+        if Self.spec.finish { client?.urlProtocolDidFinishLoading(self) }
+        // Streaming fixture never finishes: the reader must cancel before the sender does.
     }
     override func stopLoading() { stop?(); stop = nil }
 }
