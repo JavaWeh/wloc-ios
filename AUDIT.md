@@ -21,7 +21,9 @@
 
 - 新增 10 项 Swift 回归测试，覆盖错误坐标来源、地点 ID、过期草稿、收藏恢复及写保护、精度边界，以及服务端不结束响应时主动取消超限传输。
 - Windows 本地：Surge 控制与真实二进制 WLOC 集成测试通过；3 项 Python 打包测试通过；16 份 Swift 文件语法检查及 Xcode 工程结构检查通过。
-- Swift 测试和 iPhoneOS 编译必须由 macOS GitHub Actions 验证，结果在提交后补记。
+- [macOS GitHub Actions 构建](https://github.com/JavaWeh/wloc-ios/actions/runs/39228561774) 已成功，构建代码提交为 `659b25c6540055f99ef5a1674d2b21b2f015c9d1`：27 项 Swift 测试零失败，Surge 集成与 3 项 Python 测试通过，iPhoneOS Release 编译和 IPA 打包完成。
+- 下载产物后再次核验：版本 2.0.1、构建 3、arm64 设备 Mach-O、可执行权限、随包许可证及未签名状态均符合预期；IPA 为 310315 字节，SHA-256 为 `c8167159299f3d2c271481a128e25796823ec89c4401ade2e18d8632bc67be05`。
+- [下载该次 IPA 产物](https://github.com/JavaWeh/wloc-ios/actions/runs/39228561774/artifacts/12176021408)（需登录 GitHub，产物保留 14 天，过期后重新构建）。
 
 ## 尚需真机确认
 
