@@ -8,7 +8,9 @@
 
 临时服务仅监听 127.0.0.1，最多 120 秒，iOS 后台到期时主动关闭；仅 GET/HEAD 指定文件，限制请求头、并发连接、单连接时间和下载次数。运行时脚本不引用临时地址，也不请求远程坐标配置。QX 单独区分 header-only echo 读取与 body-analyze echo 写入。
 
-本地验证：五端 Node 协议与真实 WLOC 二进制集成通过，旧 Surge 集成和 3 项 Python 打包测试通过，生成脚本可复现。Swift 回归、真实回环监听及 iPhoneOS 编译结果在云端构建后补记。
+验证完成：[2.1.0 macOS 构建](https://github.com/JavaWeh/wloc-ios/actions/runs/39232732356) 成功，代码提交 `9eae529672ab574e807ad2fe453dff13c23719c5`。40 项 Swift 测试零失败（原有 27 项、新增 13 项），包含实际回环监听、停止及定时过期测试；五端 Node 协议与真实 WLOC 二进制集成、Swift 实际生成的匹配规则、旧 Surge 集成和 3 项 Python 打包测试通过，生成脚本可复现，iPhoneOS Release 编译完成。临时服务使用串行队列隔离状态，已明确其 Sendable 边界；最终构建无源代码并发警告，仅有未使用 AppIntents 时 Xcode 跳过元数据提取的提示。
+
+[下载该次 IPA](https://github.com/JavaWeh/wloc-ios/actions/runs/39232732356/artifacts/12178241922)（需登录 GitHub，保留 14 天）。下载后复核：版本 2.1.0、构建 4、Bundle ID `com.wloc.quicklocation`、iPhoneOS arm64 Mach-O、可执行权限、随包许可证及未签名状态均符合预期；IPA 中固定脚本提交号与上述构建提交一致。IPA 为 397000 字节，SHA-256：`46683177923029ce39778ce5e5c110e7e39453c08db54cb36d7564cf63f8fb29`。
 
 所有五款工具的快捷导入、文件导入、重启后保留、关闭 WLoc 后继续运行及系统定位效果，均待真机验证。QX 和 Shadowrocket 默认优先文件导入，其他工具快捷下载也标记实验性；不得将“URL 已打开”或协议模拟通过标成真机完成。
 

@@ -79,6 +79,8 @@ Mac 本地从已提交的 Git checkout 执行 `bash scripts/build-ipa.sh`；脚�
 
 测试及构建结果见 [AUDIT.md](AUDIT.md)。真机验证矩阵均暂标待验证，不把 CI 当作真实导入和定位测试。
 
+[2.1.0 构建已成功](https://github.com/JavaWeh/wloc-ios/actions/runs/39232732356)：40 项 Swift 测试、五端二进制集成与 3 项打包测试通过。[下载未签名 IPA](https://github.com/JavaWeh/wloc-ios/actions/runs/39232732356/artifacts/12178241922)（需登录 GitHub，保留 14 天）。IPA SHA-256：`46683177923029ce39778ce5e5c110e7e39453c08db54cb36d7564cf63f8fb29`。
+
 许可证为 **AGPL-3.0-or-later**，作者与来源见 [THIRD_PARTY.md](THIRD_PARTY.md)。
 
 官方接口参考：[Surge 导入](https://manual.nssurge.com/tools/url-scheme.html)、[Loon 导入](https://nsloon.app/docs/Scheme/)、[Stash 导入](https://stash.wiki/faq/url-schema)、[Quantumult X 追加资源](https://github.com/crossutility/Quantumult-X/blob/master/url-scheme.md)、[Apple 后台限制](https://developer.apple.com/documentation/BackgroundTasks/choosing-background-strategies-for-your-app)。
