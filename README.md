@@ -99,3 +99,11 @@ bash scripts/build-ipa.sh
 许可证为 **AGPL-3.0-or-later**。本版已包含修改后的上游 WLOC 脚本及许可证；作者与源码来源见 [THIRD_PARTY.md](THIRD_PARTY.md)。
 
 参考协议：[Surge HTTP request 脚本](https://manual.nssurge.com/scripting/http-request.html)、[持久化存储](https://manual.nssurge.com/scripting/api.html)、[高德 URI](https://lbs.amap.com/api/uri-api/guide/mobile-web/point)、[Google Maps URL](https://developers.google.com/maps/documentation/urls/get-started)、[Apple 后台执行限制](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time)。
+
+## v2 构建验证
+
+[v2 云端构建 #2](https://github.com/JavaWeh/wloc-ios/actions/runs/39223050972) 已成功：17 项 Swift 测试零失败，Surge 控制与真实 WLOC 二进制集成测试通过，完成 iPhoneOS arm64 编译与未签名 IPA 打包。
+
+[下载 v2 构建产物](https://github.com/JavaWeh/wloc-ios/actions/runs/39223050972/artifacts/12172068219)（需登录 GitHub；产物保留 14 天，过期后重新构建）。IPA 版本 2.0.0，最低 iOS 16；IPA 本身的 SHA-256 为 `69d5c9aa08ad86187f2e39420068c99ed00d66cde8f05c49969c21127ad857a2`。
+
+上述是编译和协议验证，不代表已在具体手机上完成 Surge 配对、地图坐标系和系统定位效果的实测。安装后请按首次配对步骤验证。

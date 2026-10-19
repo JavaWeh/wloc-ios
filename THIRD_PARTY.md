@@ -9,7 +9,7 @@ WLoc Native v2 以 **GNU Affero General Public License v3.0 or later (AGPL-3.0-o
 - 固定版本：`06feaf2f2279ab966567f946d87ead9461564634`，原始文件位于 `Surge/vendor/location-spoofer.upstream.js`。
 - 生成文件：`Surge/location-spoofer-local.js`，由 `scripts/build_local_spoofer.py` 生成。
 - 修改：读取 `wloc_native_target_v2` 本机持久化值，关闭远程 configUrl 读取；无坐标、配置损坏或 disabled 时放行原始响应。
-- 原始源文件 SHA-256：`0117ced0456db25f7f643b22d5c84bf1c9bb046a46c1df9d160011fa68d45ade`。
+- 原始源文件 SHA-256（统一 LF 换行）：`36e078178ac40ef6dbd952deaaabfe257e0873faf27403c74eab2399258c4d78`。
 
 ## 坐标换算与本机控制设计参考
 
