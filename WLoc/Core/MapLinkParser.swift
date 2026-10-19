@@ -73,14 +73,20 @@ enum MapLinkParser {
                 }
             }
         } else {
+            // A place ID overrides the textual/numeric search fallback in Google Maps.
+            // Without resolving that ID, the fallback cannot be claimed as the selected place.
+            if value("query_place_id")?.isEmpty == false || value("destination_place_id")?.isEmpty == false {
+                throw WLocError.parseFailed
+            }
             for key in ["query", "q", "destination", "daddr"] {
                 if let raw = value(key), let coordinate = pair(raw, exact: true) {
                     return try result(coordinate, name: name, source: "Google Maps", system: .wgs84,
                                       warning: coordinate.inChinaBounds ? "Google 国内道路坐标可能为 GCJ-02，请对照原地图确认坐标系。" : nil)
                 }
             }
-            let decoded = url.absoluteString.removingPercentEncoding ?? url.absoluteString
-            let pins = captures("!3d" + number + "!4d" + number, in: decoded)
+            let path = URLComponents(url: url, resolvingAgainstBaseURL: false)?.percentEncodedPath.removingPercentEncoding ?? url.path
+            let dataField = path.components(separatedBy: "/").first(where: { $0.hasPrefix("data=") }).map { String($0.dropFirst(5)) } ?? value("data") ?? ""
+            let pins = captures("!3d" + number + "!4d" + number, in: dataField)
             if pins.count > 1 { throw WLocError.parseFailed }
             let pathParts = url.pathComponents
             let placeName = pathParts.firstIndex(of: "place").flatMap { $0+1 < pathParts.count ? pathParts[$0+1] : nil }?.replacingOccurrences(of: "+", with: " ") ?? name
@@ -88,7 +94,7 @@ enum MapLinkParser {
                 return try result(Coordinate(latitude: lat, longitude: lon), name: placeName, source: "Google Maps 地点坐标", system: .wgs84,
                                   warning: Coordinate(latitude: lat, longitude: lon).inChinaBounds ? "Google 国内道路坐标可能为 GCJ-02，请核对。" : nil)
             }
-            if let camera = captures("@" + number + "," + number, in: decoded).first,
+            if let camera = captures("(?:^|/)@" + number + "," + number, in: path).first,
                let lat = Double(camera[1]), let lon = Double(camera[2]) {
                 return try result(Coordinate(latitude: lat, longitude: lon), name: placeName, source: "Google Maps 地图中心", system: .wgs84,
                                   warning: "链接仅包含地图视口中心，可能不是地点针脚。请在地图中仔细核对后再收藏。")
@@ -139,7 +145,7 @@ final class MapLinkResolver {
             guard MapLinkParser.networkAllowed(current) else { throw WLocError.unsupportedLink }
             var request = URLRequest(url: current)
             request.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 Version/18.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
-            let (data, response) = try await session.data(for: request)
+            let (data, response) = try await session.boundedData(for: request, maximumBytes: 512*1024)
             guard let response = response as? HTTPURLResponse else { break }
             if (300...399).contains(response.statusCode), let location = response.value(forHTTPHeaderField: "Location"),
                let next = URL(string: location, relativeTo: current)?.absoluteURL {

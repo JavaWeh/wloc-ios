@@ -70,7 +70,7 @@ final class LocationClient {
         request.setValue("application/json", forHTTPHeaderField: "Accept")
         request.setValue("no-store", forHTTPHeaderField: "Cache-Control")
         if body != nil { request.setValue("application/json", forHTTPHeaderField: "Content-Type") }
-        let (data, response) = try await session.data(for: request)
+        let (data, response) = try await session.boundedData(for: request, maximumBytes: 65536)
         guard let http = response as? HTTPURLResponse else { throw WLocError.bridgeMissing }
         guard !(300...399).contains(http.statusCode) else { throw WLocError.redirect }
         guard (200...299).contains(http.statusCode) else { throw WLocError.http(http.statusCode) }

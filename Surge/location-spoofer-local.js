@@ -1437,7 +1437,7 @@
           typeof local.latitude !== "number" || typeof local.longitude !== "number" ||
           !isFinite(local.latitude) || !isFinite(local.longitude) ||
           Math.abs(local.latitude) > 90 || Math.abs(local.longitude) > 180 ||
-          typeof local.horizontalAccuracy !== "number" || !isFinite(local.horizontalAccuracy) || local.horizontalAccuracy < 1) {
+          typeof local.horizontalAccuracy !== "number" || !isFinite(local.horizontalAccuracy) || local.horizontalAccuracy < 1 || local.horizontalAccuracy > 1000000) {
         local = { enabled: false };
       }
       cfg = mergeConfig(cfg, local);

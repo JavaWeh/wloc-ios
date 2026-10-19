@@ -53,24 +53,27 @@ final class AppStore: ObservableObject {
     @Published private(set) var busy = false
     @Published var alert: String?
     @Published private(set) var notice: String?
-    private let file: URL
+    private let favorites: FavoritesStore
 
     init() {
-        file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let file = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             .appendingPathComponent("places.json")
+        favorites = FavoritesStore(file: file, options: [.atomic, .completeFileProtection])
         do {
-            if FileManager.default.fileExists(atPath: file.path) {
-                places = try JSONDecoder().decode([Place].self, from: Data(contentsOf: file))
-                for place in places { try place.validate() }
+            places = try favorites.load()
+            if favorites.recoveryFile != nil {
+                alert = "原收藏文件损坏，已在 Documents 中保留 places-recovery 备份，可以重新添加收藏。"
             }
-            connection = try CredentialVault.read()
         } catch {
-            alert = "读取本地配置失败。原文件会保留，请检查设备储存空间或重新连接服务。"
+            alert = WLocError.storageReadOnly.localizedDescription
         }
+        // A damaged favorites file must not prevent loading an independent pairing.
+        do { connection = try CredentialVault.read() }
+        catch { alert = alert ?? "无法读取本机配对，请解锁设备或重新配对。" }
     }
 
     private func persist(_ next: [Place]) throws {
-        try JSONEncoder().encode(next).write(to: file, options: [.atomic, .completeFileProtection])
+        try favorites.save(next)
         places = next
     }
 

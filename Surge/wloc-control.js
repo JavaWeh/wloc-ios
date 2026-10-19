@@ -12,7 +12,7 @@
   function valid(c) {
     return c && typeof c.enabled === "boolean" && typeof c.latitude === "number" && typeof c.longitude === "number" &&
       isFinite(c.latitude) && isFinite(c.longitude) && Math.abs(c.latitude) <= 90 && Math.abs(c.longitude) <= 180 &&
-      typeof c.horizontalAccuracy === "number" && isFinite(c.horizontalAccuracy) && c.horizontalAccuracy >= 1;
+      typeof c.horizontalAccuracy === "number" && isFinite(c.horizontalAccuracy) && c.horizontalAccuracy >= 1 && c.horizontalAccuracy <= 1000000;
   }
   function read() {
     try { var c = JSON.parse($persistentStore.read(storeKey)); if (valid(c)) return c; } catch (_) {}
