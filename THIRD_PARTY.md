@@ -19,3 +19,7 @@ WLoc Native v2 以 **GNU Affero General Public License v3.0 or later (AGPL-3.0-o
 - 新增 SwiftUI 界面、地图链接解析和本机控制脚本由 JavaWeh WLoc Native 项目维护，同样以 AGPL-3.0-or-later 提供。
 
 源码与构建流程公开于 <https://github.com/JavaWeh/wloc-ios>。分发修改版或提供网络交互服务时，请保留许可证、作者信息、修改说明并依照许可证提供对应源码。
+# 2.1.0 多工具适配说明
+
+`ProxyClients/v3/response.js` 使用与 Surge v2 相同的固定上游 WLOC 核心，增加 Quantumult X 的 `$prefs` 和 `bodyBytes` 适配，强制读取本机目标、关闭坐标调试输出且不请求远程配置。由 `scripts/build_proxy_clients.py` 生成；五端控制脚本、请求准备脚本及原生配置生成器为本项目的新增实现，同样以 AGPL-3.0-or-later 发布。现有上游版本与署名继续保留如下。
+

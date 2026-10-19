@@ -7,6 +7,7 @@ on:
       - 'WLoc.xcodeproj/**'
       - 'Tests/**'
       - 'Surge/**'
+      - 'ProxyClients/**'
       - 'scripts/**'
       - 'Package.swift'
       - '.github/workflows/build-ipa.yml'

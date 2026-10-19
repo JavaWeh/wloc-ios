@@ -1,117 +1,84 @@
 # WLoc Native · 常用定位
 
-**无需自建后台。** 在 iPhone 内粘贴苹果地图、高德、Google Maps 分享链接，或使用 App 地图搜索 / 选点，将位置收藏后点一下写入 Surge 本机。
+无需自建后台。在 iPhone 内解析苹果地图、高德、Google Maps 分享链接，或使用原生地图搜索 / 选点，保存收藏后点一下写入当前代理工具。
 
-[App 源码与 Actions 构建](https://github.com/JavaWeh/wloc-ios/actions/workflows/build-ipa.yml) · [配套 Surge 模块](https://raw.githubusercontent.com/JavaWeh/wloc-ios/main/Surge/WLoc-Native.sgmodule) · [上游参考 Fork](https://github.com/JavaWeh/ios-location-spoofer)
+**2.1.0：增加五端配置生成、独立配对及快捷安装。** App 自动生成含本机密钥的专属配置，无需手动修改脚本。快捷下载及五端真实定位效果尚待真机验证，界面明确标注实验状态；协议模拟通过不等同于真机支持认证。
 
-## v2 工作方式
+[Actions 构建](https://github.com/JavaWeh/wloc-ios/actions/workflows/build-ipa.yml) · [审计与验证记录](AUDIT.md) · [上游参考 Fork](https://github.com/JavaWeh/ios-location-spoofer)
 
-~~~text
-地图链接 / App 内地图
-        ↓
-本机解析、坐标系换算、确认、收藏
-        ↓
-Surge 本机请求脚本 → 本机 persistentStore
-        ↓
-WLOC 响应脚本 → 后续系统网络定位
-~~~
+## 安装与配对
 
-不需要服务器、Cloudflare Worker、选点服务地址或后台 token。地图瓦片、地点搜索和短链展开仍需要访问相应地图提供方。带坐标的长链接和纯经纬度可以在本机解析。
+1. 自签安装 IPA，在 App 齿轮页选择当前使用的工具。
+2. Surge、Loon、Stash 优先尝试“快捷安装”；Quantumult X、Shadowrocket 优先“导出专属配置文件”。若分享列表中没有该工具，先保存到“文件”，再按页面说明在目标工具导入本地文件。
+3. 确认安装并启用组件，停用其他 WLOC 定位模块。保留已有 MITM 证书；新工具的证书仍须自行安装，并在系统设置中开启完全信任。
+4. 返回 WLoc，自动或手动点“验证本机连接”。只有接口和工具身份验证通过才完成配对。打开目标 App 或下载文件不代表已经完成安装。
+5. 回首页点选收藏，写入目标坐标，再按你原先验证成功的步骤刷新系统定位并打开地图确认。
 
-原版 location-picker 的 Node 服务没有作为常驻服务器塞进 IPA：普通 iOS App 进入后台后不能可靠地持续提供 HTTP 服务。本版把选点、搜索、解析和收藏做成原生界面，把需要持续读取的坐标交给本来就在运行的 Surge。关闭 App 后已保存的 Surge 配置仍有效。
+| 工具 | 专属文件 | 导入入口 | 当前验证状态 |
+| --- | --- | --- | --- |
+| Surge | `.sgmodule` | 安装模块 | 协议与二进制模拟；快捷导入、重启保留、真机效果待验证 |
+| Loon | `.lnplugin` | 导入插件 | 同上；包含请求准备脚本 |
+| Stash | `.stoverride` | 安装覆写 | 同上 |
+| Quantumult X | `.snippet` | 本地重写；实验快捷追加资源 | 同上；建议本地文件，避免临时地址成为长期远程引用 |
+| Shadowrocket | `.sgmodule` | 本地模块；实验快捷安装 | 同上；快捷入口兼容性待实测 |
 
-最低 iOS 16，中文 SwiftUI 界面，支持 iPhone / iPad、深色模式。实际定位能力仍取决于 Surge、MITM、WLOC、iOS 缓存和 GPS 条件。App 无法清除 locationd 缓存或自行重启系统定位服务。
+专属文件含密钥，请只用于自己的目标工具，不要上传、公开或分享。密钥分别保存在 App 钥匙串；收藏共用。切换工具会清除界面中的旧连接状态，只有当前工具被启用并验证后才能确认其配置。不会自动替换订阅、节点或主配置，也不会自动启动多个 VPN。
 
-## 首次配对（仅一次）
+## 快捷安装为什么仍有备用方式
 
-1. 安装新版 IPA，在 App 中打开 **Surge 本机配对**，复制自动生成的配对密钥。
-2. Surge → 模块 → 安装新模块，粘贴：
-   ~~~text
-   https://raw.githubusercontent.com/JavaWeh/wloc-ios/main/Surge/WLoc-Native.sgmodule
-   ~~~
-3. 在新模块参数中把 **key** 填成 App 复制的密钥。启用本模块，**停用其他 WLOC 响应改写模块**，避免同一请求被多份脚本处理。
-4. 保留现有 MITM 设置，确认 Surge CA 已安装并在 iOS 中完全信任。新模块包含相应定位域名。
-5. 返回 App，点 **验证 Surge 本机连接**。配对密钥保存在本机钥匙串。
+App 临时在 `127.0.0.1` 的随机端口提供本次配置下载，路径使用独立随机令牌，最长 120 秒；iOS 可以提前结束后台时间。服务不监听局域网、不提供目录、不运行选点后台，也不提供运行时坐标或脚本。
 
-如果安装时报“模块头部的参数声明格式错误：key:”，这是旧模块使用空默认值导致的兼容问题。请重新导入当前模块；新版以 SET_KEY_IN_APP 作为占位值，安装后须在 key 参数中替换为 App 密钥，无需重装 IPA。
+导入失败时返回 App 重新开始，或改用文件导入。若目标工具把临时地址保留为远程资源，请改用本地导入，不要依赖该地址后续更新。安装完成后，脚本由构建对应的固定 Git 提交下载，坐标保存在代理工具内部，关闭 WLoc 不影响已保存配置。
 
-配对 key 是本机模块的访问密钥，由 App 自己生成；不需要向任何网站注册，也不要把它提交到公开仓库。卸载 App 或移除配对不会自动关闭 Surge 中的设置；需要恢复时先点 App 首页的“关闭虚拟定位”。
+所有平台的“文件已交付”“已验证本机连接”“真机定位有效”是不同状态。首次使用请额外测试目标工具重启后配置是否保留；有问题时使用本地文件导入并反馈工具版本及不含密钥的错误信息。
 
-首次安装且未提交坐标时，配套模块默认不改写定位；关闭后同样放行原始响应，不回退到预设坐标。
+## 旧版 Surge 用户
+
+升级 App 保留原 Bundle ID、签名团队、收藏和旧协议配对。旧版 `Surge/WLoc-Native.sgmodule`、v1 控制路径及 `wloc-native-v2` 标记继续可用，无需强制重新安装模块。配对页也保留“连接已有旧版 Surge 模块”。
+
+若选择升级安装新组件，必须停用旧 WLOC 模块。准备新安装文件不会立刻覆盖已验证的旧配对，只有新连接验证成功才替换。
+
+旧模块报“模块头部的参数声明格式错误：key:”时，使用已修复的[旧版模块](https://raw.githubusercontent.com/JavaWeh/wloc-ios/main/Surge/WLoc-Native.sgmodule)，其默认参数为 `SET_KEY_IN_APP`；新专属配置无需该参数表。
+
+移除 App 中的配对不会关闭工具中已保存的坐标；需要恢复时先点首页“关闭虚拟定位”。
 
 ## 标记与切换
 
-- 点首页“粘贴地图链接 / App 地图选点”，粘贴地图分享的整段文字或链接，点解析。
-- 解析后核对名称、坐标、原始坐标系和地图预览，点“收藏”。收藏只保存到手机。
-- 也可以打开 App 内地图搜索地点，或拖动地图把准星放在目标上，然后收藏。
-- 回首页点选收藏，才将位置写入 Surge。按你原先验证成功的生效步骤刷新系统定位，并打开系统地图确认。
-- 支持编辑、删除、排序、收藏当前 Surge 坐标，或直接手填 WGS-84 坐标。切换地点不需要重新打开选点网页。
+- 粘贴地图分享文字或完整链接，解析后核对名称、原始坐标系和预览；也可原生地图搜索、拖动准星选点或手填纬度、经度。
+- 支持编辑、删除、排序及收藏当前工具的坐标。收藏只保存在本机，点击首页收藏才提交。
+- 纯坐标和含坐标长链本机解析；地图搜索、瓦片和短链展开仍需访问地图提供方。
+- 最终保存为 WGS-84。原生 MapKit 按 WGS-84 接口处理；高德链接默认 GCJ-02，国内苹果地图链接按 GCJ-02 提示核对，仍可手动选择 WGS-84 / GCJ-02 / BD-09。
+- Google 支持数值 query / q / destination、地点数据坐标和带提示的视口中心。不能可靠还原的地点 ID、复杂路线、反爬或依赖 JavaScript 的短链会拒绝或解析失败，不猜测坐标。
+- 修改输入清空旧草稿，过期网络结果不能覆盖新选点。短链读取上限 512 KiB，控制响应 64 KiB；定位精度限定 1～1,000,000 米。
+- 损坏收藏先保留恢复副本；读取或备份失败时禁止覆盖原文件。
 
-### 链接支持与坐标系
+原版 location-picker 的常驻 Node 服务没有塞入 IPA。本版使用原生界面，持续运行的定位改写交给代理工具。App 无法清除 locationd 缓存或控制 GPS 优先级。用户此前确认 iOS 26.4 上游网页方式可用，不代表本版五端均已真机通过。
 
-| 来源 | 当前识别格式 |
-| --- | --- |
-| 苹果地图 | coordinate、ll 参数，含坐标的新旧分享链接 |
-| 高德 | position / lnglat（经度,纬度）、p / q 分享参数、iosamap lat/lon |
-| Google Maps | query / q / destination 经纬度、!3d / !4d 地点坐标、@ 地图中心 |
-| 短链接 | 限定地图域名内的 HTTPS 重定向、规范链接和部分页面跳转，最多 5 次 |
-| 手工 | 纬度,经度；支持负数、0、英文或中文逗号 |
+## 本机协议与安全边界
 
-**不会保证任意地图短链都可解析。** 只有地点 ID、反爬页面、需要登录或 JavaScript 才能取得坐标的分享页，可能无法展开。失败时可改用 App 地图搜索 / 选点或手填坐标。
+- 新协议标记 `wloc-native-v3`，健康检查地址 `/wloc-native/v3/health` 不含密钥、坐标，返回工具标识。
+- 读写位于 `/wloc-native/v3/<本机密钥>/config`、`disable`；QX 另以 `status` 读取，避免空 body 的请求进入 body 分析脚本。新路径仍在 `https://gs-loc.apple.com` 下，由所选工具本机合成响应。
+- 专属配置的匹配规则必须精确包含本机密钥。这是鉴权边界，不能替换为通配密钥；脚本另校验 `X-WLoc-Key` 与路径一致。密钥不通过脚本参数传递，适用于 QX。
+- App 检查协议和工具身份后才发送认证请求。不要导出或分享包含完整专属路径的代理请求日志；App 不记录或显示这些 URL。
+- 坐标存储键沿用 `wloc_native_target_v2`，每个工具在自己的存储中独立保存；QX 使用 `$prefs`，其他使用 `$persistentStore`。
+- 上游 WLOC 核心固定版本并保留署名；五端共用同一份派生核心，QX 适配二进制 `bodyBytes`，Loon 使用准备脚本请求未压缩响应；未配置、关闭或损坏配置时透传。
 
-Google 的地点针脚坐标优先于地图视口中心；只有视口中心时会明确提示，含多个地点的路线不会猜选一个。不会从 HTML 中任意两个小数猜测经纬度。
+## 没有 Mac：GitHub Actions 构建
 
-最终保存和提交均为 WGS-84；支持 WGS-84、GCJ-02、BD-09 转换。App 原生 MapKit 的输入输出按 Apple 的 WGS-84 接口约定处理，不额外偏移。对于分享链接，高德默认 GCJ-02，国内苹果地图链接按 GCJ-02 提示核对；港澳台、境外和 Google 国内道路数据请对照原地图手动选择坐标系。链接使用矩形区域作默认判断，不能代替你对数据来源的确认。含 Google 地点 ID 且无法可靠还原坐标时会拒绝解析，请使用地图搜索。
+1. Actions → **Build unsigned IPA** → **Run workflow**。
+2. 成功后下载 Artifacts 中的 **WLoc-unsigned-ipa**，解压得到 IPA。
+3. 在 Windows 用自己的签名工具或 [Sideloadly](https://sideloadly.io/) 签名安装。
 
-编辑待解析文字会清空旧坐标，过期的网络结果不能覆盖新选点。链接展开最多读取 512 KiB，Surge 控制响应最多读取 64 KiB，超限即取消传输。定位精度限定为 1～1,000,000 米。
+构建不需要 Apple 账号、证书、配对密钥或地图 API key。IPA 未签名，必须自签安装。最低 iOS 16，Bundle ID 保持 `com.wloc.quicklocation`；产物保留 14 天，过期后重建。
 
-如果本机收藏文件内容损坏，会先在 Documents 中保留独立恢复副本，再允许保存新收藏；读取或备份失败时禁止覆盖原文件，并在界面提示。
-
-## 本机控制实现
-
-App 首先对 Surge 拦截路径发起不含密钥、坐标的 health 请求，检查专属协议标记，再发送配对密钥和坐标。控制地址由 App 固定，不需要输入服务地址。
-
-- 控制路径：gs-loc.apple.com/wloc-native/v1/health、config、disable。
-- 控制脚本：Surge/wloc-control.js，直接返回 JSON，不通过远端选点后台。
-- 存储键：wloc_native_target_v2。
-- 改写脚本：Surge/location-spoofer-local.js，从本机存储读取；缺少或损坏配置时不改写。
-- 需要配套模块、Surge VPN 和 MITM 启用；原版其他选点页 / 模块的存储格式与本版不同。
-
-本项目暂未在用户设备完成真实的 Surge 配对与定位验证。CI 的测试会模拟 Surge 环境并使用真实二进制 WLOC 测试数据验证“写入 → 改写 → 关闭后放行”。
-
-## 没有 Mac：使用 GitHub Actions 构建 IPA
-
-1. 打开仓库 Actions → **Build unsigned IPA** → **Run workflow**。
-2. 等成功后，从该次运行底部 Artifacts 下载 **WLoc-unsigned-ipa**。
-3. 解压得到 WLoc-unsigned.ipa，在 Windows 用自己的签名工具或 [Sideloadly](https://sideloadly.io/) 签名安装。
-4. 安装后按上面的“首次配对”步骤操作。保持原 Bundle ID 和签名团队有助于保留收藏和钥匙串。
-
-构建不需要 Apple 账号、签名证书、配对 key 或地图 API key。未签名 IPA 需自签后才能安装。Actions 产物保留 14 天，过期后重新构建。
-
-Mac 本地也可运行：
-~~~bash
-bash scripts/build-ipa.sh
-~~~
-
-输出 build/WLoc-unsigned.ipa。工程无第三方 iOS 依赖；MapKit 使用系统框架。
+Mac 本地从已提交的 Git checkout 执行 `bash scripts/build-ipa.sh`；脚本把当前提交固定到 IPA 的脚本版本。也可显式提供 `GITHUB_SHA` 为已公开、包含完整脚本的 40 位提交 SHA。输出 `build/WLoc-unsigned.ipa`。
 
 ## 测试与开源
 
-- Swift 核心测试：地图参数顺序、针脚与视口优先级、非法链接、短链规范 URL、坐标换算、配对探测、写入与关闭协议。
-- Node 集成测试：Surge 控制脚本鉴权、错误配置、持久化失败、真实 WLOC 二进制响应改写、未配置与关闭后的透传。
-- Python 测试：IPA 结构、可执行权限及模拟器产物拒绝。
-- 本机测试不能代替真机安装和地图效果验证。
+保留原有 27 项 Swift 回归测试，新增配置与链接生成、钥匙串数据模型迁移、独立配对、身份检查、临时下载访问控制和实际回环网络测试。Node 测试逐端验证控制、存储和真实二进制 WLOC 改写，并校验 Swift 实际生成的匹配规则。CI 另检查生成文件可复现、工程、打包与真实 iPhoneOS 编译。
 
-审计范围、修复项和验证记录见 [AUDIT.md](AUDIT.md)。本次审计版本为 2.0.1（构建 3）。
+测试及构建结果见 [AUDIT.md](AUDIT.md)。真机验证矩阵均暂标待验证，不把 CI 当作真实导入和定位测试。
 
-许可证为 **AGPL-3.0-or-later**。本版已包含修改后的上游 WLOC 脚本及许可证；作者与源码来源见 [THIRD_PARTY.md](THIRD_PARTY.md)。
+许可证为 **AGPL-3.0-or-later**，作者与来源见 [THIRD_PARTY.md](THIRD_PARTY.md)。
 
-参考协议：[Surge HTTP request 脚本](https://manual.nssurge.com/scripting/http-request.html)、[持久化存储](https://manual.nssurge.com/scripting/api.html)、[高德 URI](https://lbs.amap.com/api/uri-api/guide/mobile-web/point)、[Google Maps URL](https://developers.google.com/maps/documentation/urls/get-started)、[Apple 后台执行限制](https://developer.apple.com/documentation/uikit/extending-your-app-s-background-execution-time)。
-
-## 2.0.1 审计修复与构建验证
-
-[2.0.1 云端构建](https://github.com/JavaWeh/wloc-ios/actions/runs/39228561774) 已成功：27 项 Swift 测试零失败，Surge 控制与真实 WLOC 二进制集成测试及 3 项 Python 打包测试通过，完成 iPhoneOS arm64 编译与未签名 IPA 打包。修复原生地图重复偏移、链接坐标误读、过期导入结果、超限响应、收藏损坏覆盖和精度边界，详见 [审计记录](AUDIT.md)。
-
-[下载 2.0.1 构建产物](https://github.com/JavaWeh/wloc-ios/actions/runs/39228561774/artifacts/12176021408)（需登录 GitHub；产物保留 14 天，过期后重新构建）。IPA 版本 2.0.1（构建 3），最低 iOS 16；IPA 本身的 SHA-256 为 `c8167159299f3d2c271481a128e25796823ec89c4401ade2e18d8632bc67be05`。
-
-上述是编译和协议验证，不代表已在具体手机上完成 Surge 配对、地图坐标系和系统定位效果的实测。安装后请按首次配对步骤验证。
+官方接口参考：[Surge 导入](https://manual.nssurge.com/tools/url-scheme.html)、[Loon 导入](https://nsloon.app/docs/Scheme/)、[Stash 导入](https://stash.wiki/faq/url-schema)、[Quantumult X 追加资源](https://github.com/crossutility/Quantumult-X/blob/master/url-scheme.md)、[Apple 后台限制](https://developer.apple.com/documentation/BackgroundTasks/choosing-background-strategies-for-your-app)。
