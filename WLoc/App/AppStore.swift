@@ -4,7 +4,7 @@ import Security
 enum CredentialVault {
     private static var query: [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: "WLoc.connection",
+         kSecAttrService as String: "WLoc.localConnection.v2",
          kSecAttrAccount as String: "primary"]
     }
 
@@ -98,18 +98,18 @@ final class AppStore: ObservableObject {
         do { try persist(next) } catch { show(error) }
     }
 
-    func connect(link: String) async -> Bool {
+    func connect(key: String) async -> Bool {
         guard !busy else { return false }
         busy = true
         defer { busy = false }
         do {
-            let candidate = try Connection(link: link)
+            let candidate = try Connection(key: key)
             let location = try await LocationClient(connection: candidate).fetch()
             try CredentialVault.save(candidate)
             connection = candidate
             remote = location
             checkedAt = Date()
-            notice = "服务已连接"
+            notice = "Surge 本机配对成功"
             return true
         } catch { show(error); return false }
     }
@@ -128,7 +128,7 @@ final class AppStore: ObservableObject {
     func refresh() async {
         await perform { client in
             let location = try await client.fetch()
-            self.notice = "已读取服务端配置"
+            self.notice = "已读取 Surge 本机配置"
             return location
         }
     }
@@ -144,14 +144,14 @@ final class AppStore: ObservableObject {
     func disable() async {
         await perform { client in
             let location = try await client.disable()
-            self.notice = "已关闭服务端虚拟定位，请刷新系统定位并在地图确认"
+            self.notice = "已关闭本机虚拟定位，请刷新系统定位并在地图确认"
             return location
         }
     }
 
     private func perform(_ operation: (LocationClient) async throws -> RemoteLocation) async {
         guard !busy else { return }
-        guard let connection else { alert = "请先连接现有选点服务。"; return }
+        guard let connection else { alert = "请先完成 Surge 本机配对。"; return }
         busy = true
         notice = nil
         defer { busy = false }
@@ -170,7 +170,7 @@ final class AppStore: ObservableObject {
         if let known = error as? WLocError { alert = known.localizedDescription }
         else if let known = error as? CredentialVault.VaultError { alert = known.localizedDescription }
         else if error is URLError {
-            alert = "无法确认服务状态，请检查网络和服务地址后刷新。若刚提交了地点，服务可能已保存，请勿仅凭此提示判断失败。"
+            alert = "未能读取 Surge 本机接口。请确认 Surge 正在运行，配套模块及 MITM 已启用，证书已信任。若刚提交了地点，请刷新核对保存状态。"
         } else { alert = "操作未完成，请检查本地储存空间或服务配置后重试。" }
     }
 }

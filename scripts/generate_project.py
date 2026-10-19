@@ -26,12 +26,14 @@ def main():
         source_ids.append(build_id)
     assets = add("assets", 'isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WLoc/Resources/Assets.xcassets; sourceTree = "<group>";')
     assets_build = add("assets:build", f"isa = PBXBuildFile; fileRef = {assets};")
+    license_file = add("license", 'isa = PBXFileReference; lastKnownFileType = text; path = WLoc/Resources/LICENSE.txt; sourceTree = "<group>";')
+    license_build = add("license:build", f"isa = PBXBuildFile; fileRef = {license_file};")
     info = add("info", 'isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = WLoc/Resources/Info.plist; sourceTree = "<group>";')
     product = add("product", 'isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WLoc.app; sourceTree = BUILT_PRODUCTS_DIR;')
     products = add("products", f'isa = PBXGroup; children = ({product},); name = Products; sourceTree = "<group>";')
-    add("main", f'isa = PBXGroup; children = ({", ".join(file_ids + [assets, info, products])},); sourceTree = "<group>";')
+    add("main", f'isa = PBXGroup; children = ({", ".join(file_ids + [assets, license_file, info, products])},); sourceTree = "<group>";')
     add("sources", f'isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ({", ".join(source_ids)},); runOnlyForDeploymentPostprocessing = 0;')
-    add("resources", f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({assets_build},); runOnlyForDeploymentPostprocessing = 0;')
+    add("resources", f'isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = ({assets_build}, {license_build},); runOnlyForDeploymentPostprocessing = 0;')
     add("frameworks", 'isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0;')
     for mode in ("Debug", "Release"):
         project_settings = {
@@ -46,7 +48,7 @@ def main():
         target_settings = {
             "PRODUCT_BUNDLE_IDENTIFIER": "com.wloc.quicklocation", "PRODUCT_NAME": '"$(TARGET_NAME)"',
             "INFOPLIST_FILE": "WLoc/Resources/Info.plist", "GENERATE_INFOPLIST_FILE": "NO",
-            "MARKETING_VERSION": "1.0.0", "CURRENT_PROJECT_VERSION": "1",
+            "MARKETING_VERSION": "2.0.0", "CURRENT_PROJECT_VERSION": "2",
             "TARGETED_DEVICE_FAMILY": '"1,2"', "SUPPORTED_PLATFORMS": '"iphoneos iphonesimulator"',
             "SUPPORTS_MACCATALYST": "NO", "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",

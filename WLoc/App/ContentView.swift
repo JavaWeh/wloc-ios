@@ -4,6 +4,7 @@ struct ContentView: View {
     @EnvironmentObject private var store: AppStore
     @Environment(\.scenePhase) private var scenePhase
     @State private var settings = false
+    @State private var importing = false
     @State private var editing: Place?
     @State private var confirmDisable = false
 
@@ -20,7 +21,7 @@ struct ContentView: View {
                             if let remote = store.remote {
                                 Text(remote.coordinateText).font(.subheadline.monospacedDigit())
                             } else {
-                                Text(store.connection == nil ? "首次连接后，点选收藏即可提交坐标" : "下拉刷新，读取当前配置")
+                                Text(store.connection == nil ? "先收藏地点，再完成一次 Surge 本机配对" : "下拉刷新，读取 Surge 本机坐标")
                                     .font(.subheadline).foregroundStyle(.secondary)
                             }
                             if let date = store.checkedAt {
@@ -29,26 +30,31 @@ struct ContentView: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        if store.busy { ProgressView().accessibilityLabel("正在连接服务") }
+                        if store.busy { ProgressView().accessibilityLabel("正在连接 Surge") }
                     }.padding(.vertical, 8)
                     if let notice = store.notice {
                         Label(notice, systemImage: "checkmark.circle")
                             .font(.subheadline).foregroundStyle(.green)
                     }
                     if store.connection == nil {
-                        Button("连接现有选点服务") { settings = true }
+                        Button("Surge 本机配对（无需后台）") { settings = true }
                     }
-                } header: { Text("服务端配置") } footer: {
-                    Text("保存坐标后，Surge 会在后续 WLOC 请求中读取。这里不代表系统 GPS 已切换，请在地图中确认。")
+                } header: { Text("Surge 本机配置") } footer: {
+                    Text("写入本机后，Surge 在后续 WLOC 请求中读取。App 可关闭，无需后台服务器。定位是否生效请在系统地图中确认。")
                 }
+
+                Section {
+                    Button { importing = true } label: { Label("粘贴地图链接 / App 地图选点", systemImage: "map.fill") }
+                    Button { addPlace() } label: { Label("手动输入 WGS-84 坐标", systemImage: "number") }
+                } header: { Text("标记新地点") }
 
                 Section {
                     if store.places.isEmpty {
                         VStack(alignment: .leading, spacing: 8) {
                             Label("添加你的第一个地点", systemImage: "mappin.and.ellipse").font(.headline)
-                            Text("输入名称和 WGS-84 经纬度，之后轻点地点即可提交。")
+                            Text("复制苹果地图、高德、Google Maps 链接，或直接在 App 地图选点。")
                                 .font(.subheadline).foregroundStyle(.secondary)
-                            Button("添加地点") { addPlace() }.padding(.top, 4)
+                            Button("添加地点") { importing = true }.padding(.top, 4)
                         }.padding(.vertical, 12)
                     }
                     ForEach(store.places) { place in
@@ -97,7 +103,7 @@ struct ContentView: View {
                             Label("关闭虚拟定位", systemImage: "location.slash")
                         }.disabled(store.busy || store.remote?.enabled == false)
                         Button { Task { await store.refresh() } } label: {
-                            Label("刷新服务端配置", systemImage: "arrow.clockwise")
+                            Label("刷新 Surge 本机配置", systemImage: "arrow.clockwise")
                         }.disabled(store.busy)
                     } footer: {
                         Text("关闭后服务将返回 enabled=false。系统可能继续使用缓存坐标，需按你现有的生效步骤操作。")
@@ -107,11 +113,11 @@ struct ContentView: View {
             .navigationTitle("WLoc 常用定位")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button { settings = true } label: { Image(systemName: "gearshape") }.accessibilityLabel("服务设置")
+                    Button { settings = true } label: { Image(systemName: "gearshape") }.accessibilityLabel("Surge 本机配对")
                 }
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     EditButton()
-                    Button { addPlace() } label: { Image(systemName: "plus") }.accessibilityLabel("添加地点")
+                    Button { importing = true } label: { Image(systemName: "plus") }.accessibilityLabel("导入地图地点")
                 }
             }
             .refreshable { await store.refresh() }
@@ -120,20 +126,21 @@ struct ContentView: View {
                 if phase == .active { Task { await store.refreshIfConnected() } }
             }
             .sheet(isPresented: $settings) { ConnectionView() }
+            .sheet(isPresented: $importing) { ImportPlaceView() }
             .sheet(item: $editing) { place in PlaceEditor(place: place) }
-            .confirmationDialog("关闭服务端虚拟定位？", isPresented: $confirmDisable, titleVisibility: .visible) {
+            .confirmationDialog("关闭 Surge 本机虚拟定位？", isPresented: $confirmDisable, titleVisibility: .visible) {
                 Button("关闭虚拟定位", role: .destructive) { Task { await store.disable() } }
             } message: { Text("关闭后仍需刷新系统定位，并打开地图确认。") }
-            .alert("提示", isPresented: Binding(get: { store.alert != nil && !settings && editing == nil }, set: { if !$0 { store.alert = nil } })) {
+            .alert("提示", isPresented: Binding(get: { store.alert != nil && !settings && !importing && editing == nil }, set: { if !$0 { store.alert = nil } })) {
                 Button("知道了", role: .cancel) { store.alert = nil }
             } message: { Text(store.alert ?? "") }
         }
     }
 
     private var statusTitle: String {
-        guard store.connection != nil else { return "尚未连接" }
+        guard store.connection != nil else { return "尚未配对 Surge" }
         guard let remote = store.remote else { return "配置待确认" }
-        return remote.enabled ? "服务端虚拟定位已开启" : "服务端虚拟定位已关闭"
+        return remote.enabled ? "本机虚拟定位已开启" : "本机虚拟定位已关闭"
     }
 
     private func addPlace() { editing = Place(name: "", latitude: 0, longitude: 0) }

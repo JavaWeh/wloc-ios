@@ -6,6 +6,7 @@ on:
       - 'WLoc/**'
       - 'WLoc.xcodeproj/**'
       - 'Tests/**'
+      - 'Surge/**'
       - 'scripts/**'
       - 'Package.swift'
       - '.github/workflows/build-ipa.yml'

@@ -3,8 +3,8 @@ from pathlib import Path
 import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
-files = [ROOT / name for name in ("README.md", "Package.swift", ".gitignore", ".gitattributes")]
-for directory in ("WLoc", "WLoc.xcodeproj", "Tests", "scripts", ".github"):
+files = [ROOT / name for name in ("README.md", "Package.swift", ".gitignore", ".gitattributes", "LICENSE", "THIRD_PARTY.md")]
+for directory in ("WLoc", "WLoc.xcodeproj", "Tests", "scripts", ".github", "Surge"):
     files.extend(path for path in (ROOT / directory).rglob("*")
                  if path.is_file() and "__pycache__" not in path.parts)
 output = ROOT / "dist/WLoc-iOS-source.zip"

@@ -28,11 +28,11 @@ struct PlaceEditor: View {
                     coordinateField("纬度", placeholder: "-90 ～ 90", value: $latitude)
                     coordinateField("经度", placeholder: "-180 ～ 180", value: $longitude)
                 } header: { Text("WGS-84 坐标") } footer: {
-                    Text("经纬度请勿填反。高德、腾讯地图通常使用 GCJ-02，百度地图使用 BD-09，不能直接当作 WGS-84 输入。可在首页收藏现有服务的正确坐标。负数可切换数字符号键盘输入或直接粘贴。")
+                    Text("这里编辑的是已换算的 WGS-84 坐标。高德等原始坐标请从首页“粘贴地图链接”导入并选择坐标系。负数可切换数字符号键盘输入。")
                 }
                 Section {
                     coordinateField("水平精度（米）", placeholder: "39", value: $accuracy)
-                } footer: { Text("只提交经纬度和水平精度，保留服务现有的海拔等其他配置。保存地点仅存到手机，返回首页点选后才提交到服务。") }
+                } footer: { Text("收藏仅保存在手机，返回首页点选后才写入 Surge 本机。") }
                 if let error { Section { Text(error).foregroundStyle(.red) } }
             }
             .navigationTitle(original.name.isEmpty ? "添加地点" : "编辑地点")

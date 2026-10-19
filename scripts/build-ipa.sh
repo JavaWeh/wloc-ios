@@ -8,6 +8,7 @@ if ! command -v xcodebuild >/dev/null 2>&1; then
 fi
 python3 scripts/check_project.py
 python3 scripts/test_packaging.py
+node scripts/test_surge.cjs
 /usr/bin/plutil -lint WLoc.xcodeproj/project.pbxproj WLoc/Resources/Info.plist
 swift test
 xcodebuild -project WLoc.xcodeproj -scheme WLoc -configuration Release \
