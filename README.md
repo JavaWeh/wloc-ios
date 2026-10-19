@@ -11,8 +11,12 @@
 ## 当前交付状态
 
 - 已提供 SwiftUI 应用源码、可直接打开的 `WLoc.xcodeproj`、核心接口单元测试、构建脚本及 GitHub Actions 工作流。
+- **首次云端构建已成功：** [构建记录 #1](https://github.com/JavaWeh/wloc-ios/actions/runs/39219898365)，Xcode 16.4 / iPhoneOS 18.5 SDK，9 项核心测试零失败，成功生成 iPhoneOS arm64 未签名 IPA。最低 iOS 16；尚未验证具体设备上的安装和定位效果。
+- [下载该次 IPA 构建产物](https://github.com/JavaWeh/wloc-ios/actions/runs/39219898365/artifacts/12170947989)（需登录 GitHub，产物保留 14 天；过期后重新运行 Actions）。解压后得到 `WLoc-unsigned.ipa`。
 - 源码在 Windows 上开发；本地已通过工程结构与 OpenStep 解析、9 个 Swift 文件的语法解析、工作流 YAML 解析和 3 项打包单元测试。实际编译与核心接口测试由 macOS Actions 运行，结果以对应运行记录为准；尚未完成真机验证。
 - GitHub Actions 或 Mac 完成编译后会生成 `WLoc-unsigned.ipa`，再使用你自己的工具签名安装。仅把源码压成 IPA 无法安装。
+
+首次 IPA 的 SHA-256：`3dd50f208d6d102ebc32bc16f1af349477995226a9a825930c6e9bddcf4dd0f4`。这是 IPA 本身的校验值，不是 Actions 外层 ZIP 的校验值。
 
 ## 工作方式与前提
 
