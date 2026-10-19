@@ -2,25 +2,32 @@ import SwiftUI
 import Security
 
 enum CredentialVault {
-    private static var query: [String: Any] {
+    private static func query(_ service: String) -> [String: Any] {
         [kSecClass as String: kSecClassGenericPassword,
-         kSecAttrService as String: "WLoc.localConnection.v2",
+         kSecAttrService as String: service,
          kSecAttrAccount as String: "primary"]
     }
 
-    static func read() throws -> Connection? {
-        var attributes = query
+    private static func readData(_ service: String) throws -> Data? {
+        var attributes = query(service)
         attributes[kSecReturnData as String] = true
         attributes[kSecMatchLimit as String] = kSecMatchLimitOne
         var result: CFTypeRef?
         let status = SecItemCopyMatching(attributes as CFDictionary, &result)
         if status == errSecItemNotFound { return nil }
         guard status == errSecSuccess, let data = result as? Data else { throw VaultError.access }
-        return try JSONDecoder().decode(Connection.self, from: data)
+        return data
     }
 
-    static func save(_ connection: Connection) throws {
-        let data = try JSONEncoder().encode(connection)
+    static func readProfiles() throws -> PairingProfiles {
+        if let data = try readData("WLoc.localConnections.v3") { return try JSONDecoder().decode(PairingProfiles.self, from: data) }
+        var profiles = PairingProfiles()
+        if let data = try readData("WLoc.localConnection.v2") { profiles.set(try JSONDecoder().decode(Connection.self, from: data), verified: true) }
+        return profiles
+    }
+    static func save(_ profiles: PairingProfiles) throws {
+        let data = try JSONEncoder().encode(profiles)
+        let query = query("WLoc.localConnections.v3")
         let attributes: [String: Any] = [
             kSecValueData as String: data,
             kSecAttrAccessible as String: kSecAttrAccessibleWhenUnlockedThisDeviceOnly
@@ -33,11 +40,6 @@ enum CredentialVault {
         guard SecItemAdd(entry as CFDictionary, nil) == errSecSuccess else { throw VaultError.access }
     }
 
-    static func remove() throws {
-        let status = SecItemDelete(query as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else { throw VaultError.access }
-    }
-
     enum VaultError: LocalizedError {
         case access
         var errorDescription: String? { "无法访问钥匙串，请解锁设备后重试。" }
@@ -47,7 +49,9 @@ enum CredentialVault {
 @MainActor
 final class AppStore: ObservableObject {
     @Published private(set) var places: [Place] = []
-    @Published private(set) var connection: Connection?
+    @Published private(set) var profiles = PairingProfiles()
+    var connection: Connection? { profiles.current }
+    var selectedClient: ProxyClient { profiles.selected }
     @Published private(set) var remote: RemoteLocation?
     @Published private(set) var checkedAt: Date?
     @Published private(set) var busy = false
@@ -68,7 +72,7 @@ final class AppStore: ObservableObject {
             alert = WLocError.storageReadOnly.localizedDescription
         }
         // A damaged favorites file must not prevent loading an independent pairing.
-        do { connection = try CredentialVault.read() }
+        do { profiles = try CredentialVault.readProfiles() }
         catch { alert = alert ?? "无法读取本机配对，请解锁设备或重新配对。" }
     }
 
@@ -101,18 +105,33 @@ final class AppStore: ObservableObject {
         do { try persist(next) } catch { show(error) }
     }
 
-    func connect(key: String) async -> Bool {
+    func select(_ client: ProxyClient) {
+        guard !busy, client != profiles.selected else { return }
+        var next = profiles; next.selected = client
+        do {
+            try CredentialVault.save(next); profiles = next
+            remote = nil; checkedAt = nil; notice = nil
+        } catch { show(error) }
+    }
+    func prepareConnection() throws -> Connection {
+        if let draft = profiles.pending[selectedClient.rawValue] { return draft }
+        if let saved = profiles.connections[selectedClient.rawValue], saved.version == .localV3 { return saved }
+        let draft = try Connection(key: InstallSecret.make(), client: selectedClient, version: .localV3)
+        var next = profiles; next.pending[selectedClient.rawValue] = draft
+        try CredentialVault.save(next); profiles = next
+        return draft
+    }
+    func connect(_ candidate: Connection) async -> Bool {
         guard !busy else { return false }
         busy = true
         defer { busy = false }
         do {
-            let candidate = try Connection(key: key)
             let location = try await LocationClient(connection: candidate).fetch()
-            try CredentialVault.save(candidate)
-            connection = candidate
+            var next = profiles; next.selected = candidate.client; next.set(candidate, verified: true)
+            try CredentialVault.save(next); profiles = next
             remote = location
             checkedAt = Date()
-            notice = "Surge 本机配对成功"
+            notice = "\(candidate.client.title) 本机配对成功"
             return true
         } catch { show(error); return false }
     }
@@ -120,8 +139,11 @@ final class AppStore: ObservableObject {
     func disconnect() {
         guard !busy else { return }
         do {
-            try CredentialVault.remove()
-            connection = nil
+            var next = profiles
+            next.connections.removeValue(forKey: selectedClient.rawValue)
+            next.pending.removeValue(forKey: selectedClient.rawValue)
+            next.verified.remove(selectedClient)
+            try CredentialVault.save(next); profiles = next
             remote = nil
             checkedAt = nil
             notice = nil
@@ -131,7 +153,7 @@ final class AppStore: ObservableObject {
     func refresh() async {
         await perform { client in
             let location = try await client.fetch()
-            self.notice = "已读取 Surge 本机配置"
+            self.notice = "已读取 \(self.selectedClient.title) 本机配置"
             return location
         }
     }
@@ -154,7 +176,7 @@ final class AppStore: ObservableObject {
 
     private func perform(_ operation: (LocationClient) async throws -> RemoteLocation) async {
         guard !busy else { return }
-        guard let connection else { alert = "请先完成 Surge 本机配对。"; return }
+        guard let connection else { alert = "请先完成 \(selectedClient.title) 本机配对。"; return }
         busy = true
         notice = nil
         defer { busy = false }
@@ -173,7 +195,7 @@ final class AppStore: ObservableObject {
         if let known = error as? WLocError { alert = known.localizedDescription }
         else if let known = error as? CredentialVault.VaultError { alert = known.localizedDescription }
         else if error is URLError {
-            alert = "未能读取 Surge 本机接口。请确认 Surge 正在运行，配套模块及 MITM 已启用，证书已信任。若刚提交了地点，请刷新核对保存状态。"
+            alert = "未能读取 \(selectedClient.title) 本机接口。请确认对应工具正在运行，配套组件及 MITM 已启用，证书已信任。若刚提交了地点，请刷新核对保存状态。"
         } else { alert = "操作未完成，请检查本地储存空间或服务配置后重试。" }
     }
 }

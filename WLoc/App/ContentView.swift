@@ -21,7 +21,7 @@ struct ContentView: View {
                             if let remote = store.remote {
                                 Text(remote.coordinateText).font(.subheadline.monospacedDigit())
                             } else {
-                                Text(store.connection == nil ? "先收藏地点，再完成一次 Surge 本机配对" : "下拉刷新，读取 Surge 本机坐标")
+                                Text(store.connection == nil ? "先收藏地点，再完成一次本机配对" : "下拉刷新，读取 \(store.selectedClient.title) 本机坐标")
                                     .font(.subheadline).foregroundStyle(.secondary)
                             }
                             if let date = store.checkedAt {
@@ -30,17 +30,17 @@ struct ContentView: View {
                             }
                         }
                         Spacer(minLength: 0)
-                        if store.busy { ProgressView().accessibilityLabel("正在连接 Surge") }
+                        if store.busy { ProgressView().accessibilityLabel("正在连接 \(store.selectedClient.title)") }
                     }.padding(.vertical, 8)
                     if let notice = store.notice {
                         Label(notice, systemImage: "checkmark.circle")
                             .font(.subheadline).foregroundStyle(.green)
                     }
                     if store.connection == nil {
-                        Button("Surge 本机配对（无需后台）") { settings = true }
+                        Button("选择工具并配对（无需后台）") { settings = true }
                     }
-                } header: { Text("Surge 本机配置") } footer: {
-                    Text("写入本机后，Surge 在后续 WLOC 请求中读取。App 可关闭，无需后台服务器。定位是否生效请在系统地图中确认。")
+                } header: { Text("\(store.selectedClient.title) 本机配置") } footer: {
+                    Text("写入本机后，当前工具在后续 WLOC 请求中读取。App 可关闭，无需后台服务器。定位是否生效请在系统地图中确认。")
                 }
 
                 Section {
@@ -103,7 +103,7 @@ struct ContentView: View {
                             Label("关闭虚拟定位", systemImage: "location.slash")
                         }.disabled(store.busy || store.remote?.enabled == false)
                         Button { Task { await store.refresh() } } label: {
-                            Label("刷新 Surge 本机配置", systemImage: "arrow.clockwise")
+                            Label("刷新 \(store.selectedClient.title) 本机配置", systemImage: "arrow.clockwise")
                         }.disabled(store.busy)
                     } footer: {
                         Text("关闭后服务将返回 enabled=false。系统可能继续使用缓存坐标，需按你现有的生效步骤操作。")
@@ -113,7 +113,7 @@ struct ContentView: View {
             .navigationTitle("WLoc 常用定位")
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
-                    Button { settings = true } label: { Image(systemName: "gearshape") }.accessibilityLabel("Surge 本机配对")
+                    Button { settings = true } label: { Image(systemName: "gearshape") }.accessibilityLabel("代理工具配对与安装")
                 }
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     EditButton()
@@ -123,12 +123,12 @@ struct ContentView: View {
             .refreshable { await store.refresh() }
             .task { if store.checkedAt == nil { await store.refreshIfConnected() } }
             .onChange(of: scenePhase) { phase in
-                if phase == .active { Task { await store.refreshIfConnected() } }
+                if phase == .active && !settings { Task { await store.refreshIfConnected() } }
             }
             .sheet(isPresented: $settings) { ConnectionView() }
             .sheet(isPresented: $importing) { ImportPlaceView() }
             .sheet(item: $editing) { place in PlaceEditor(place: place) }
-            .confirmationDialog("关闭 Surge 本机虚拟定位？", isPresented: $confirmDisable, titleVisibility: .visible) {
+            .confirmationDialog("关闭当前工具的本机虚拟定位？", isPresented: $confirmDisable, titleVisibility: .visible) {
                 Button("关闭虚拟定位", role: .destructive) { Task { await store.disable() } }
             } message: { Text("关闭后仍需刷新系统定位，并打开地图确认。") }
             .alert("提示", isPresented: Binding(get: { store.alert != nil && !settings && !importing && editing == nil }, set: { if !$0 { store.alert = nil } })) {
@@ -138,7 +138,7 @@ struct ContentView: View {
     }
 
     private var statusTitle: String {
-        guard store.connection != nil else { return "尚未配对 Surge" }
+        guard store.connection != nil else { return "尚未配对 \(store.selectedClient.title)" }
         guard let remote = store.remote else { return "配置待确认" }
         return remote.enabled ? "本机虚拟定位已开启" : "本机虚拟定位已关闭"
     }

@@ -28,12 +28,12 @@ final class LocationClient {
     // No coordinates or key are sent until the local module identifies itself.
     private func probe() async throws {
         let data = try await request("health", authenticated: false)
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              json["bridge"] as? String == Connection.bridge else { throw WLocError.bridgeMissing }
+        try checkIdentity(data)
     }
     func fetch() async throws -> RemoteLocation {
         try await probe()
-        let data = try await request("config")
+        let readRoute = connection.version == .localV3 && connection.client == .quantumultX ? "status" : "config"
+        let data = try await request(readRoute)
         return try decode(data)
     }
     func apply(_ place: Place) async throws -> RemoteLocation {
@@ -54,13 +54,17 @@ final class LocationClient {
         return saved
     }
     private func decode(_ data: Data) throws -> RemoteLocation {
-        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
-              json["bridge"] as? String == Connection.bridge else { throw WLocError.bridgeMissing }
+        try checkIdentity(data)
         do {
             let location = try JSONDecoder().decode(RemoteLocation.self, from: data)
             try location.validate()
             return location
         } catch { throw WLocError.invalidResponse }
+    }
+    private func checkIdentity(_ data: Data) throws {
+        guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+              json["bridge"] as? String == connection.expectedBridge else { throw WLocError.bridgeMissing }
+        if connection.version == .localV3, json["client"] as? String != connection.client.rawValue { throw WLocError.wrongClient }
     }
     private func request(_ route: String, body: Data? = nil, authenticated: Bool = true) async throws -> Data {
         var request = URLRequest(url: connection.url(for: route))

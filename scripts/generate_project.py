@@ -48,7 +48,7 @@ def main():
         target_settings = {
             "PRODUCT_BUNDLE_IDENTIFIER": "com.wloc.quicklocation", "PRODUCT_NAME": '"$(TARGET_NAME)"',
             "INFOPLIST_FILE": "WLoc/Resources/Info.plist", "GENERATE_INFOPLIST_FILE": "NO",
-            "MARKETING_VERSION": "2.0.1", "CURRENT_PROJECT_VERSION": "3",
+            "MARKETING_VERSION": "2.1.0", "CURRENT_PROJECT_VERSION": "4",
             "TARGETED_DEVICE_FAMILY": '"1,2"', "SUPPORTED_PLATFORMS": '"iphoneos iphonesimulator"',
             "SUPPORTS_MACCATALYST": "NO", "ASSETCATALOG_COMPILER_APPICON_NAME": "AppIcon",
             "ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME": "AccentColor",
