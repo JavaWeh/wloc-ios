@@ -1,0 +1,40 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {};
+	objectVersion = 56;
+	objects = {
+		2238A20FA16772624295F801 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/App/AppStore.swift"; sourceTree = "<group>"; };
+		659EE07A465E55BA9AE75700 = { isa = PBXBuildFile; fileRef = 2238A20FA16772624295F801; };
+		97E3DE69EF561725CD9751E1 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/App/ConnectionView.swift"; sourceTree = "<group>"; };
+		EFDD8A64583D7F83E235D300 = { isa = PBXBuildFile; fileRef = 97E3DE69EF561725CD9751E1; };
+		2AF53B4C9C8AAC7059DFE383 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/App/ContentView.swift"; sourceTree = "<group>"; };
+		37768B48525A783BFCB35103 = { isa = PBXBuildFile; fileRef = 2AF53B4C9C8AAC7059DFE383; };
+		676A72E2E5AB7C9C202E2B42 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/App/PlaceEditor.swift"; sourceTree = "<group>"; };
+		8D94716E3614E59878AEDFDA = { isa = PBXBuildFile; fileRef = 676A72E2E5AB7C9C202E2B42; };
+		04B9D7414ED0490779AA52DE = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/App/WLocApp.swift"; sourceTree = "<group>"; };
+		54EFC879472A5F182622BE60 = { isa = PBXBuildFile; fileRef = 04B9D7414ED0490779AA52DE; };
+		878F213AF1509087C6EB7B23 = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/Core/LocationClient.swift"; sourceTree = "<group>"; };
+		511DEC2237FE7E0FCFEE93A5 = { isa = PBXBuildFile; fileRef = 878F213AF1509087C6EB7B23; };
+		E141A1CF2F8B33EE3793030C = { isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "WLoc/Core/Models.swift"; sourceTree = "<group>"; };
+		EC243643B3E4CEC707C89DEE = { isa = PBXBuildFile; fileRef = E141A1CF2F8B33EE3793030C; };
+		3685E330EC5277A9DD5661C6 = { isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = WLoc/Resources/Assets.xcassets; sourceTree = "<group>"; };
+		66F17FD47768D90D75A0AC8F = { isa = PBXBuildFile; fileRef = 3685E330EC5277A9DD5661C6; };
+		59BD0A3FF43B32849B319E64 = { isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = WLoc/Resources/Info.plist; sourceTree = "<group>"; };
+		38A007151ABE87CC01A5B6E9 = { isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = WLoc.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		FBDC4F23F93125BBEEAE800C = { isa = PBXGroup; children = (38A007151ABE87CC01A5B6E9,); name = Products; sourceTree = "<group>"; };
+		B28B7AF69320201D1CF206EB = { isa = PBXGroup; children = (2238A20FA16772624295F801, 97E3DE69EF561725CD9751E1, 2AF53B4C9C8AAC7059DFE383, 676A72E2E5AB7C9C202E2B42, 04B9D7414ED0490779AA52DE, 878F213AF1509087C6EB7B23, E141A1CF2F8B33EE3793030C, 3685E330EC5277A9DD5661C6, 59BD0A3FF43B32849B319E64, FBDC4F23F93125BBEEAE800C,); sourceTree = "<group>"; };
+		BCE16DD0260827ECF338C787 = { isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (659EE07A465E55BA9AE75700, EFDD8A64583D7F83E235D300, 37768B48525A783BFCB35103, 8D94716E3614E59878AEDFDA, 54EFC879472A5F182622BE60, 511DEC2237FE7E0FCFEE93A5, EC243643B3E4CEC707C89DEE,); runOnlyForDeploymentPostprocessing = 0; };
+		0189424A5A60FED329FA868E = { isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (66F17FD47768D90D75A0AC8F,); runOnlyForDeploymentPostprocessing = 0; };
+		7561BFB015D8F536760CB671 = { isa = PBXFrameworksBuildPhase; buildActionMask = 2147483647; files = (); runOnlyForDeploymentPostprocessing = 0; };
+		AB52CB08E0FDF02BF6C67C33 = { isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; DEBUG_INFORMATION_FORMAT = dwarf; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG; ENABLE_TESTABILITY = YES; }; name = Debug; };
+		59E1BEE911F66DA37FEBACDC = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = com.wloc.quicklocation; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = WLoc/Resources/Info.plist; GENERATE_INFOPLIST_FILE = NO; MARKETING_VERSION = 1.0.0; CURRENT_PROJECT_VERSION = 1; TARGETED_DEVICE_FAMILY = "1,2"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_STYLE = Automatic; SWIFT_EMIT_LOC_STRINGS = YES; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; }; name = Debug; };
+		5283471FF90C511CFE244FFF = { isa = XCBuildConfiguration; buildSettings = { ALWAYS_SEARCH_USER_PATHS = NO; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; IPHONEOS_DEPLOYMENT_TARGET = 16.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; SWIFT_OPTIMIZATION_LEVEL = "-O"; }; name = Release; };
+		F4C425279CD5DDD18FD6DC6D = { isa = XCBuildConfiguration; buildSettings = { PRODUCT_BUNDLE_IDENTIFIER = com.wloc.quicklocation; PRODUCT_NAME = "$(TARGET_NAME)"; INFOPLIST_FILE = WLoc/Resources/Info.plist; GENERATE_INFOPLIST_FILE = NO; MARKETING_VERSION = 1.0.0; CURRENT_PROJECT_VERSION = 1; TARGETED_DEVICE_FAMILY = "1,2"; SUPPORTED_PLATFORMS = "iphoneos iphonesimulator"; SUPPORTS_MACCATALYST = NO; ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_STYLE = Automatic; SWIFT_EMIT_LOC_STRINGS = YES; LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks"; }; name = Release; };
+		4BA304E783CFBB9FA6E56552 = { isa = XCConfigurationList; buildConfigurations = (AB52CB08E0FDF02BF6C67C33, 5283471FF90C511CFE244FFF,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		1329ED92EA4767251759D0DA = { isa = XCConfigurationList; buildConfigurations = (59E1BEE911F66DA37FEBACDC, F4C425279CD5DDD18FD6DC6D,); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		0E8A3AD980EC179856012B7E = { isa = PBXNativeTarget; buildConfigurationList = 1329ED92EA4767251759D0DA; buildPhases = (BCE16DD0260827ECF338C787, 7561BFB015D8F536760CB671, 0189424A5A60FED329FA868E,); buildRules = (); dependencies = (); name = WLoc; productName = WLoc; productReference = 38A007151ABE87CC01A5B6E9; productType = "com.apple.product-type.application"; };
+		98F54143AB4E86B28C3AFEE0 = { isa = PBXProject; attributes = { BuildIndependentTargetsInParallel = YES; LastUpgradeCheck = 1600; }; buildConfigurationList = 4BA304E783CFBB9FA6E56552; compatibilityVersion = "Xcode 14.0"; developmentRegion = "zh-Hans"; hasScannedForEncodings = 0; knownRegions = ("zh-Hans", en, Base,); mainGroup = B28B7AF69320201D1CF206EB; productRefGroup = FBDC4F23F93125BBEEAE800C; projectDirPath = ""; projectRoot = ""; targets = (0E8A3AD980EC179856012B7E,); };
+	};
+	rootObject = 98F54143AB4E86B28C3AFEE0;
+}

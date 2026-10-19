@@ -1,0 +1,27 @@
+name: Build unsigned IPA
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - 'WLoc/**'
+      - 'WLoc.xcodeproj/**'
+      - 'Tests/**'
+      - 'scripts/**'
+      - 'Package.swift'
+      - '.github/workflows/build-ipa.yml'
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: macos-15
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test, build for device, and package
+        run: bash scripts/build-ipa.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: WLoc-unsigned-ipa
+          path: build/WLoc-unsigned.ipa
+          if-no-files-found: error
+          retention-days: 14
