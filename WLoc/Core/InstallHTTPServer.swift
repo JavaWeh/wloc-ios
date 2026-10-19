@@ -39,7 +39,9 @@ struct InstallDownloadSession {
 }
 
 /// An expiring, loopback-only file transfer. Never used to serve coordinates or scripts.
-final class InstallHTTPServer {
+// Every mutable field and Network callback is confined to `queue`; callers only
+// cross that boundary through start/stop. This is a queue-backed Sendable type.
+final class InstallHTTPServer: @unchecked Sendable {
     private let queue = DispatchQueue(label: "WLoc.install-download")
     private var listener: NWListener?
     private var clients: [UUID: NWConnection] = [:]
